@@ -24,6 +24,9 @@ export async function GET(request: NextRequest) {
       redirectUri: REDDIT_REDIRECT_URI,
     });
 
+    console.log(!!reddit);
+    console.log(!!state);
+
     // Store the Reddit credentials in session or secure cookie
     // Redirect to Singpass authentication
     return NextResponse.redirect(new URL('/api/auth/singpass', request.url));
@@ -31,4 +34,4 @@ export async function GET(request: NextRequest) {
     console.error('Reddit authentication error:', error);
     return NextResponse.json({ error: 'Authentication failed' }, { status: 500 });
   }
-} 
+}

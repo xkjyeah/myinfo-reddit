@@ -28,6 +28,8 @@ export async function GET(request: Request) {
     const me = await reddit.getMe().fetch();
     const username = me.name;
 
+    console.log(!!username);
+
     // Set the user's flair in the subreddit
     const subreddit = await reddit.getSubreddit(SUBREDDIT_NAME);
     await subreddit.selectUserFlair({

@@ -1,8 +1,5 @@
-import { readFileSync } from 'fs';
-import * as jose from 'jose';
 import { NextRequest, NextResponse } from 'next/server';
 import * as oidClient from 'openid-client';
-import { join } from 'path';
 
 import { getConfiguration } from '../keys';
 

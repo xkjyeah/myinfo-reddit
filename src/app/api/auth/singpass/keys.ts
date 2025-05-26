@@ -34,13 +34,23 @@ export async function getClient() {
       token_endpoint_auth_method: 'private_key_jwt',
       id_token_signed_response_alg: 'ES256',
       userinfo_encrypted_response_enc: 'A256GCM',
-      userinfo_encrypted_response_alg: 'ES256',
-      userinfo_signed_response_alg: 'ECDH-ES+A256KW',
+      userinfo_encrypted_response_alg: 'ECDH-ES+A256KW',
+      userinfo_signed_response_alg: 'ES256',
     },
     {
       keys: [
-        await jose.exportJWK(await ourPrivateSigKey()),
-        await jose.exportJWK(await ourPrivateEncKey()),
+        {
+          ...(await jose.exportJWK(await ourPrivateSigKey())),
+          kid: 'my-sig-key',
+          use: 'sig',
+          alg: 'ES256',
+        },
+        {
+          ...(await jose.exportJWK(await ourPrivateEncKey())),
+          kid: 'my-enc-key',
+          use: 'enc',
+          alg: 'ECDH-ES+A256KW',
+        },
       ] as any, // different versions of jose :(
     }
   );

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import * as oidClient from 'openid-client';
 
-import { getConfiguration } from '../keys';
+// import * as oidClient from 'openid-client';
+
+import { getClient } from '../keys';
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,27 +21,26 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid state' }, { status: 400 });
     }
 
-    const configuration = await getConfiguration();
+    const client = await getClient();
 
-    const tokenSet = await oidClient.authorizationCodeGrant(configuration, new URL(request.url), {
-      pkceCodeVerifier: codeVerifier,
-      expectedState: storedState,
-      expectedNonce: nonce,
-    });
+    console.log(Object.fromEntries(searchParams.entries()));
+    debugger;
 
-    // Exchange code for tokens
-    const userInfoResponse = await oidClient.fetchProtectedResource(
-      configuration,
-      tokenSet.access_token,
-      new URL(configuration.serverMetadata().userinfo_endpoint!),
-      'GET'
+    const tokenSet = await client.callback(
+      process.env.MYINFO_APP_REDIRECT_URL!,
+      Object.fromEntries(searchParams.entries()),
+      {
+        code_verifier: codeVerifier,
+        nonce,
+        state,
+      }
     );
+    debugger;
 
-    if (!userInfoResponse.ok) {
-      throw new Error(`Token endpoint error: ${userInfoResponse.statusText}`);
-    }
+    const userInfo = await client.userinfo(tokenSet);
+    console.log(userInfo);
 
-    const userInfo = await userInfoResponse.json();
+    console.log('User Info', userInfo);
 
     // Create response
     const response = NextResponse.json(userInfo);
@@ -59,7 +59,13 @@ export async function GET(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error('Callback error:', error);
-    return NextResponse.json({ error: 'Failed to process callback' }, { status: 500 });
+    console.log('Whtf');
+    debugger;
+    // console.error('Callback error:', error.stack);
+    // console.log(error.cause);
+    return NextResponse.json(
+      { error: 'Failed to process callback', message: (error as Error).message },
+      { status: 500 }
+    );
   }
 }

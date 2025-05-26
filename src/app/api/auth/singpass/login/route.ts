@@ -2,15 +2,16 @@ import * as crypto from 'crypto';
 import { NextResponse } from 'next/server';
 import * as oidClient from 'openid-client';
 
-import { getConfiguration } from '../keys';
+// import { getConfiguration } from '../keys';
+import { getClient } from '../keys';
 
 export async function GET() {
   try {
     // Generate code verifier
-    const codeVerifier = await oidClient.randomPKCECodeVerifier();
+    const codeVerifier = oidClient.generators.codeVerifier();
 
     // Generate code challenge
-    const codeChallenge = await oidClient.calculatePKCECodeChallenge(codeVerifier);
+    const codeChallenge = oidClient.generators.codeChallenge(codeVerifier);
 
     // Generate state
     const state = crypto.randomBytes(16).toString('hex');
@@ -19,7 +20,8 @@ export async function GET() {
     const nonce = crypto.randomBytes(16).toString('hex');
 
     // Build authorization URL
-    const authUrl = oidClient.buildAuthorizationUrl(await getConfiguration(), {
+    const client = await getClient();
+    const authUrl = client.authorizationUrl({
       response_type: 'code',
       scope: 'openid residentialstatus',
       code_challenge: codeChallenge,

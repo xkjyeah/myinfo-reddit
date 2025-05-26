@@ -16,7 +16,7 @@
     "dotenv-safe": "^9.1.0",
     "jose": "^6.0.11",
     "next": "15.1.8",
-    "openid-client": "^6.5.0",
+    "openid-client": "^5.7.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "snoowrap": "^1.23.0"

@@ -1,4 +1,5 @@
 import * as crypto from 'crypto';
+import * as jose from 'jose';
 import * as oidClient from 'openid-client';
 
 export async function ourPrivateEncKey() {
@@ -11,12 +12,37 @@ export async function ourPrivateSigKey() {
   return await crypto.createPrivateKey(privateKey);
 }
 
-let configuration: oidClient.Configuration | null = null;
-
 // OIDC configuration for Singpass staging environment
 const OID_URL = process.env.MYINFO_HOST + '/.well-known/openid-configuration';
 
-export async function getConfiguration() {
-  configuration ||= await oidClient.discovery(new URL(OID_URL), process.env.MYINFO_APP_ID!);
-  return configuration;
+// let configuration: oidClient.Configuration | null = null;
+
+// export async function getConfiguration() {
+//   configuration ||= await oidClient.discovery(new URL(OID_URL), process.env.MYINFO_APP_ID!);
+//   return configuration;
+// }
+
+let client: oidClient.Client | null = null;
+
+export async function getClient() {
+  const issuer = await oidClient.Issuer.discover(OID_URL);
+
+  client ||= new issuer.Client(
+    {
+      client_id: process.env.MYINFO_APP_ID!,
+      response_types: ['code'],
+      token_endpoint_auth_method: 'private_key_jwt',
+      id_token_signed_response_alg: 'ES256',
+      userinfo_encrypted_response_enc: 'A256GCM',
+      userinfo_encrypted_response_alg: 'ES256',
+      userinfo_signed_response_alg: 'ECDH-ES+A256KW',
+    },
+    {
+      keys: [
+        await jose.exportJWK(await ourPrivateSigKey()),
+        await jose.exportJWK(await ourPrivateEncKey()),
+      ] as any, // different versions of jose :(
+    }
+  );
+  return client;
 }

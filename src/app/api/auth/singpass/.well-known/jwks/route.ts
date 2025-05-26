@@ -22,7 +22,7 @@ export async function GET() {
           ...(await jose.exportJWK(await toPublicKeyOnly(await ourPrivateEncKey()))),
           kid: 'my-enc-key',
           use: 'enc',
-          alg: 'ES256',
+          alg: 'ECDH-ES+A256KW',
         },
       ],
     };

@@ -1,18 +1,15 @@
+import * as crypto from 'crypto';
 import * as jose from 'jose';
 import * as oidClient from 'openid-client';
 
 export async function ourPrivateEncKey() {
   const privateKey = process.env.MYINFO_PRIVATE_ENC_KEY!.replace(/\|/g, '\n');
-  return await jose.importPKCS8(privateKey, 'RS256', {
-    extractable: true,
-  });
+  return await crypto.createPrivateKey(privateKey);
 }
 
 export async function ourPrivateSigKey() {
   const privateKey = process.env.MYINFO_PRIVATE_SIG_KEY!.replace(/\|/g, '\n');
-  return await jose.importPKCS8(privateKey, 'RS256', {
-    extractable: true,
-  });
+  return await crypto.createPrivateKey(privateKey);
 }
 
 let configuration: oidClient.Configuration | null = null;

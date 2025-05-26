@@ -16,13 +16,13 @@ export async function GET() {
           ...(await jose.exportJWK(await toPublicKeyOnly(await ourPrivateSigKey()))),
           kid: 'my-sig-key',
           use: 'sig',
-          alg: 'RS256',
+          alg: 'ES256',
         },
         {
           ...(await jose.exportJWK(await toPublicKeyOnly(await ourPrivateEncKey()))),
           kid: 'my-enc-key',
           use: 'enc',
-          alg: 'RSA256',
+          alg: 'ES256',
         },
       ],
     };

@@ -8,6 +8,7 @@ export async function GET(request: NextRequest) {
     // Get the authorization code and state from query parameters
     const searchParams = request.nextUrl.searchParams;
     const code = searchParams.get('code');
+    const state = searchParams.get('state');
 
     // Get stored state and code verifier from cookies
     const storedState = request.cookies.get('auth_state')?.value;
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
     const nonce = request.cookies.get('nonce')?.value;
 
     // Validate state
-    if (!code || !storedState || !nonce) {
+    if (!code || !storedState || !nonce || !state || state !== storedState) {
       return NextResponse.json({ error: 'Invalid state' }, { status: 400 });
     }
 

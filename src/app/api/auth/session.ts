@@ -58,8 +58,6 @@ export async function setAuthData(
     .setIssuedAt()
     .sign(key);
 
-  console.log('Setting cookie', jwt, data);
-
   response.cookies.set('auth', jwt, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',

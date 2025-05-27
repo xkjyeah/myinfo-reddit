@@ -4,6 +4,9 @@ import * as cookie from 'cookie';
 import Link from 'next/link';
 import { Suspense, useEffect, useState } from 'react';
 
+import { FlairInfoProvider, useFlairInfo } from '../components/FlairInfoContext';
+import RenderFlair from '../components/RenderFlair';
+
 const ResidentialStatus = ({ code }: { code: string | null }) => {
   switch (code) {
     case 'P':
@@ -38,6 +41,16 @@ function Home() {
   }, []);
 
   return (
+    <FlairInfoProvider subreddit={info?.targetSubreddit || 'verifiedsingapore'}>
+      <HomeImpl
+        subreddit={info?.targetSubreddit || 'verifiedsingapore'}
+        residentialStatus={info?.residentialStatus || null}
+      />
+    </FlairInfoProvider>
+  );
+}
+function HomeImpl({ residentialStatus }: { subreddit: string; residentialStatus: string | null }) {
+  return (
     <main className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-lg">
         <div className="text-center">
@@ -45,13 +58,16 @@ function Home() {
           <p className="mt-2 text-gray-600">
             Your residential status:{' '}
             <b>
-              <ResidentialStatus code={info?.residentialStatus || 'U'} />
+              <ResidentialStatus code={residentialStatus} />
             </b>
+          </p>
+          <p className="mt-2 text-gray-600">
+            Your flair: <RenderFlair code={residentialStatus || 'U'} />
           </p>
         </div>
 
         <div className="mt-8 space-y-4">
-          {info?.residentialStatus ? (
+          {residentialStatus ? (
             <Link
               href="/api/auth/reddit"
               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
@@ -60,8 +76,8 @@ function Home() {
             </Link>
           ) : (
             <p>
-              We were not able to retrieve your residential status from Myinfo. Do you want to try
-              again?
+              We were not able to retrieve your residential status from Myinfo. Do you want to{' '}
+              <Link href="/api/auth/singpass/login">try again</Link>?
             </p>
           )}
         </div>

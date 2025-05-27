@@ -6,87 +6,42 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 
 import { FlairV2 } from './api/reddit/flairs';
+import {
+  FlairInfoProvider,
+  StatusCodeToDescription,
+  useFlairInfo,
+} from './components/FlairInfoContext';
+import RenderFlair from './components/RenderFlair';
 
-const StatusCodeToDescription = {
-  C: 'Citizen',
-  P: 'PR',
-  A: 'Foreigner',
-};
-
-function Home() {
-  // Get the target subreddit from the URL
-  const targetSubreddit = useSearchParams().get('subreddit');
-
-  const [subredditFlairInfo, setSubredditFlairInfo] = useState<Record<string, FlairV2> | null>(
-    null
-  );
-
-  useEffect(() => {
-    if (targetSubreddit) {
-      const formData = new FormData();
-      formData.append('targetSubreddit', targetSubreddit);
-
-      // save the target onto the cookie so we don't lose it
-      fetch(
-        new Request(`/api/reddit/set-target`, {
-          method: 'POST',
-          body: formData,
-        })
-      );
-
-      // also, fetch the flair info
-      fetch(
-        new Request(`/api/reddit/flair-info?subreddit=${targetSubreddit}`, {
-          method: 'GET',
-        })
-      ).then(async (ff) => {
-        if (ff.ok) {
-          setSubredditFlairInfo(await ff.json());
-        } else {
-          throw new Error('Error from API -- ' + (await ff.text()));
-        }
-      });
-    }
-  }, [targetSubreddit]);
-
+function HomeImpl({ subreddit }: { subreddit: string }) {
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-lg">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900">Reddit Singpass Verification</h1>
           <p className="mt-2 text-gray-600">
-            {targetSubreddit
-              ? `Verify your Singapore citizenship status to get your flair on r/${targetSubreddit}`
+            {subreddit
+              ? `Verify your Singapore citizenship status to get your flair on r/${subreddit}`
               : 'Verify your Singapore citizenship status to get your subreddit flair'}
           </p>
-          {subredditFlairInfo && (
-            <p>
-              <table style={{ width: '100%' }}>
-                <tr>
-                  <th>Status</th>
-                  <th>Flair</th>
-                </tr>
-                {Object.entries(subredditFlairInfo || {}).map(([status, flair]) => {
-                  return (
-                    <tr key={status}>
-                      <td style={{ textAlign: 'left' }}>{StatusCodeToDescription[status]}</td>
-                      <td style={{ textAlign: 'left' }}>
-                        <span
-                          style={{
-                            padding: '0.2em',
-                            color: flair.text_color == 'light' ? 'white' : 'black',
-                            backgroundColor: flair.background_color,
-                          }}
-                        >
-                          {flair.text}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </table>
-            </p>
-          )}
+          <p>
+            <table style={{ width: '100%' }}>
+              <tr>
+                <th>Status</th>
+                <th>Flair</th>
+              </tr>
+              {Object.entries(StatusCodeToDescription || {}).map(([status, description]) => {
+                return (
+                  <tr key={status}>
+                    <td style={{ textAlign: 'left' }}>{description}</td>
+                    <td style={{ textAlign: 'left' }}>
+                      <RenderFlair code={status} />
+                    </td>
+                  </tr>
+                );
+              })}
+            </table>
+          </p>
         </div>
 
         <div className="mt-8 space-y-4">
@@ -108,6 +63,30 @@ function Home() {
         </div>
       </div>
     </main>
+  );
+}
+function Home() {
+  // Get the target subreddit from the URL
+  const targetSubreddit = useSearchParams().get('subreddit');
+
+  useEffect(() => {
+    if (targetSubreddit) {
+      const formData = new FormData();
+      formData.append('targetSubreddit', targetSubreddit);
+      // save the target onto the cookie so we don't lose it
+      fetch(
+        new Request(`/api/reddit/set-target`, {
+          method: 'POST',
+          body: formData,
+        })
+      );
+    }
+  }, [targetSubreddit]);
+
+  return (
+    <FlairInfoProvider subreddit={targetSubreddit || 'verifiedsingapore'}>
+      <HomeImpl subreddit={targetSubreddit || 'verifiedsingapore'} />
+    </FlairInfoProvider>
   );
 }
 

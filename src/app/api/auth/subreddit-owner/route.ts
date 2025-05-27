@@ -7,7 +7,7 @@ const REDDIT_REDIRECT_URI = process.env.REDDIT_REDIRECT_URI!;
 export async function GET() {
   const authUrl = Snoowrap.getAuthUrl({
     clientId: REDDIT_CLIENT_ID,
-    scope: ['identity'],
+    scope: ['identity modflair'],
     redirectUri: REDDIT_REDIRECT_URI,
     permanent: false,
     state: Math.random().toString(36).substring(7),

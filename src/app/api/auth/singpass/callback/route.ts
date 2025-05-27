@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
       response,
       {
         ...(await getAuthData(request)),
-        residentialStatus: get(userInfo, 'residentialstatus.code'),
+        residentialStatus: get(userInfo, 'residentialstatus.code') as string,
       },
       60 * 5 * 1000
     );

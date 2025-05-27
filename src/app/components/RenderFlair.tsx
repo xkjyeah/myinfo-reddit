@@ -1,6 +1,6 @@
 import { useFlairInfo } from './FlairInfoContext';
 
-export default function renderFlair(props: { code: string }) {
+export default function RenderFlair(props: { code: string }) {
   const flairInfo = useFlairInfo();
 
   if (!flairInfo) {

@@ -1,10 +1,9 @@
 'use client';
 
-import * as cookie from 'cookie';
 import Link from 'next/link';
 import { Suspense, useEffect, useState } from 'react';
 
-import { FlairInfoProvider, useFlairInfo } from '../components/FlairInfoContext';
+import { FlairInfoProvider } from '../components/FlairInfoContext';
 import RenderFlair from '../components/RenderFlair';
 
 const ResidentialStatus = ({ code }: { code: string | null }) => {
@@ -18,13 +17,6 @@ const ResidentialStatus = ({ code }: { code: string | null }) => {
     default:
       return 'Unknown :(';
   }
-};
-
-const normalizedResidentialStatus = (code: string) => {
-  if (['P', 'C', 'A'].includes(code)) {
-    return code;
-  }
-  return null;
 };
 
 function Home() {

@@ -3,14 +3,9 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect } from 'react';
 
-import { FlairV2 } from './api/reddit/flairs';
-import {
-  FlairInfoProvider,
-  StatusCodeToDescription,
-  useFlairInfo,
-} from './components/FlairInfoContext';
+import { FlairInfoProvider, StatusCodeToDescription } from './components/FlairInfoContext';
 import RenderFlair from './components/RenderFlair';
 
 function HomeImpl({ subreddit }: { subreddit: string }) {

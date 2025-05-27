@@ -5,7 +5,6 @@ export const StatusToTemplateClass = {
   P: /\bverified-pr\b/,
   A: /\bverified-foreigner\b/,
 };
-type ElementType<T> = T extends Array<infer U> ? U : never;
 
 export type FlairV2 = {
   text: string;

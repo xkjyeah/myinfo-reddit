@@ -30,6 +30,7 @@ export async function getAuthData(request: NextRequest): Promise<Record<string, 
   const cookieData = request.cookies.get('auth');
 
   if (!cookieData) {
+    console.log('No cookie data');
     return {};
   }
 
@@ -57,10 +58,12 @@ export async function setAuthData(
     .setIssuedAt()
     .sign(key);
 
+  console.log('Setting cookie', jwt, data);
+
   response.cookies.set('auth', jwt, {
     httpOnly: true,
-    secure: true,
-    sameSite: 'strict',
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
     expires: new Date(Date.now() + expiresInMs),
   });
 }

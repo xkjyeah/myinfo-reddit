@@ -2,6 +2,7 @@
 
 import * as cookie from 'cookie';
 import Link from 'next/link';
+import { Suspense, useEffect, useState } from 'react';
 
 const ResidentialStatus = ({ code }: { code: string | null }) => {
   switch (code) {
@@ -23,11 +24,18 @@ const normalizedResidentialStatus = (code: string) => {
   return null;
 };
 
-export default function Home() {
-  const cookies = cookie.parse(window.document.cookie);
-  const { session } = cookies;
-  const json = session ? JSON.parse(session) : null;
-  const residentialStatus = normalizedResidentialStatus(json?.residentialStatus);
+function Home() {
+  const [info, setInfo] = useState<{
+    residentialStatus: string | null;
+    targetSubreddit: string | null;
+  } | null>(null);
+
+  useEffect(() => {
+    fetch('/api/auth/info').then(async (r) => {
+      const json = await r.json();
+      setInfo(json);
+    });
+  }, []);
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -37,18 +45,18 @@ export default function Home() {
           <p className="mt-2 text-gray-600">
             Your residential status:{' '}
             <b>
-              <ResidentialStatus code={residentialStatus} />
+              <ResidentialStatus code={info?.residentialStatus || 'U'} />
             </b>
           </p>
         </div>
 
         <div className="mt-8 space-y-4">
-          {residentialStatus ? (
+          {info?.residentialStatus ? (
             <Link
               href="/api/auth/reddit"
               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
             >
-              Continue with Reddit
+              Add your flair to reddit
             </Link>
           ) : (
             <p>
@@ -59,5 +67,12 @@ export default function Home() {
         </div>
       </div>
     </main>
+  );
+}
+export default function SuspendedHome() {
+  return (
+    <Suspense>
+      <Home />
+    </Suspense>
   );
 }

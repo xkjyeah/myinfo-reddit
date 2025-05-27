@@ -3,16 +3,18 @@ import Snoowrap from 'snoowrap';
 
 import { getAuthData } from '../../auth/session';
 import { StatusToTemplateClass, getStatusToFlairTemplates } from '../flairs';
-import type { FlairTemplate } from '../flairs';
+import type { FlairV2 } from '../flairs';
 
 const REDDIT_CLIENT_ID = process.env.REDDIT_CLIENT_ID!;
 const REDDIT_CLIENT_SECRET = process.env.REDDIT_CLIENT_SECRET!;
 const REDDIT_USER_AGENT = process.env.REDDIT_USER_AGENT!;
+const REDDIT_REFRESH_TOKEN = process.env.REDDIT_REFRESH_TOKEN!;
 
 async function ensureFlairTemplatesExist(
+  reddit: Snoowrap,
   subreddit: Snoowrap.Subreddit
-): Promise<Record<string, FlairTemplate>> {
-  const availableFlairTemplates = await getStatusToFlairTemplates(subreddit);
+): Promise<Record<string, FlairV2>> {
+  const availableFlairTemplates = await getStatusToFlairTemplates(reddit, subreddit);
 
   const missingFlairs = Object.keys(StatusToTemplateClass).filter(
     (k) => !(k in availableFlairTemplates)
@@ -24,18 +26,13 @@ async function ensureFlairTemplatesExist(
 }
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const flair = searchParams.get('flair');
-  const accessToken = searchParams.get('access_token');
-
-  if (!flair || !accessToken) {
-    return NextResponse.json({ error: 'Missing flair or access token' }, { status: 400 });
-  }
-
   const authData = await getAuthData(request);
 
   if (!authData.residentialStatus) {
     return NextResponse.json({ error: 'Missing residential status' }, { status: 400 });
+  }
+  if (!authData.redditUsername) {
+    return NextResponse.json({ error: 'Missing reddit username' }, { status: 400 });
   }
 
   try {
@@ -44,14 +41,14 @@ export async function GET(request: NextRequest) {
       userAgent: REDDIT_USER_AGENT,
       clientId: REDDIT_CLIENT_ID,
       clientSecret: REDDIT_CLIENT_SECRET,
-      accessToken,
+      refreshToken: REDDIT_REFRESH_TOKEN,
     });
     const targetSubreddit = authData.targetSubreddit;
 
     // Set the user's flair in the subreddit
     const subreddit: Snoowrap.Subreddit = await (reddit.getSubreddit as any)(targetSubreddit);
 
-    const flairTemplates = await ensureFlairTemplatesExist(subreddit);
+    const flairTemplates = await ensureFlairTemplatesExist(reddit, subreddit);
 
     const flairToSet = flairTemplates[authData.residentialStatus || ''];
 
@@ -59,8 +56,8 @@ export async function GET(request: NextRequest) {
       await (subreddit.setMultipleUserFlairs as any)([
         {
           name: authData.redditUsername,
-          text: flairToSet?.flair_text,
-          cssClass: flairToSet?.flair_css_class,
+          text: flairToSet?.text,
+          cssClass: flairToSet?.css_class,
         },
       ]);
     } else {

@@ -3,18 +3,23 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 
-import { FlairTemplate } from './api/reddit/flairs';
+import { FlairV2 } from './api/reddit/flairs';
 
-export default function Home() {
+const StatusCodeToDescription = {
+  C: 'Citizen',
+  P: 'PR',
+  A: 'Foreigner',
+};
+
+function Home() {
   // Get the target subreddit from the URL
   const targetSubreddit = useSearchParams().get('subreddit');
 
-  const [subredditFlairInfo, setSubredditFlairInfo] = useState<Record<
-    string,
-    FlairTemplate
-  > | null>(null);
+  const [subredditFlairInfo, setSubredditFlairInfo] = useState<Record<string, FlairV2> | null>(
+    null
+  );
 
   useEffect(() => {
     if (targetSubreddit) {
@@ -50,25 +55,35 @@ export default function Home() {
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900">Reddit Singpass Verification</h1>
           <p className="mt-2 text-gray-600">
-            Verify your Singapore citizenship status to get your subreddit flair
+            {targetSubreddit
+              ? `Verify your Singapore citizenship status to get your flair on r/${targetSubreddit}`
+              : 'Verify your Singapore citizenship status to get your subreddit flair'}
           </p>
           {subredditFlairInfo && (
             <p>
-              <table>
+              <table style={{ width: '100%' }}>
                 <tr>
                   <th>Status</th>
                   <th>Flair</th>
                 </tr>
-                {Object.entries(subredditFlairInfo || {}).map(([status, flair]) => (
-                  <tr key={status}>
-                    <td>{status}</td>
-                    <td>
-                      {JSON.stringify(flair)}
-
-                      {flair.flair_text}
-                    </td>
-                  </tr>
-                ))}
+                {Object.entries(subredditFlairInfo || {}).map(([status, flair]) => {
+                  return (
+                    <tr key={status}>
+                      <td style={{ textAlign: 'left' }}>{StatusCodeToDescription[status]}</td>
+                      <td style={{ textAlign: 'left' }}>
+                        <span
+                          style={{
+                            padding: '0.2em',
+                            color: flair.text_color == 'light' ? 'white' : 'black',
+                            backgroundColor: flair.background_color,
+                          }}
+                        >
+                          {flair.text}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
               </table>
             </p>
           )}
@@ -93,5 +108,13 @@ export default function Home() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function SuspendedHome() {
+  return (
+    <Suspense>
+      <Home />
+    </Suspense>
   );
 }

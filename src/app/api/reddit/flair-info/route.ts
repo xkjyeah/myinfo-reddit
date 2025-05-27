@@ -6,6 +6,7 @@ import { getStatusToFlairTemplates } from '../flairs';
 const REDDIT_CLIENT_ID = process.env.REDDIT_CLIENT_ID!;
 const REDDIT_CLIENT_SECRET = process.env.REDDIT_CLIENT_SECRET!;
 const REDDIT_USER_AGENT = process.env.REDDIT_USER_AGENT!;
+const REDDIT_REFRESH_TOKEN = process.env.REDDIT_REFRESH_TOKEN!;
 
 // Returns a mapping of status to flair
 export async function GET(request: NextRequest) {
@@ -18,11 +19,12 @@ export async function GET(request: NextRequest) {
       userAgent: REDDIT_USER_AGENT,
       clientId: REDDIT_CLIENT_ID,
       clientSecret: REDDIT_CLIENT_SECRET,
+      refreshToken: REDDIT_REFRESH_TOKEN,
     });
     // Set the user's flair in the subreddit
     const subreddit: Snoowrap.Subreddit = await (reddit.getSubreddit as any)(targetSubreddit);
 
-    const flairTemplates = await getStatusToFlairTemplates(subreddit);
+    const flairTemplates = await getStatusToFlairTemplates(reddit, subreddit);
 
     return NextResponse.json(flairTemplates);
   } catch (error) {

@@ -26,7 +26,11 @@ export async function saveTargetSubreddit(
   );
 }
 
-export async function getAuthData(request: NextRequest): Promise<Record<string, string>> {
+export async function getAuthData(request: NextRequest): Promise<{
+  redditUsername?: string;
+  targetSubreddit?: string;
+  residentialStatus?: string;
+}> {
   const cookieData = request.cookies.get('auth');
 
   if (!cookieData) {

@@ -9,17 +9,18 @@ type UrlUpdates = {
 };
 
 export function constructForwardedForUrl(nextRequest: NextRequest, urlUpdates: UrlUpdates) {
-  console.log('DEBUG constructForwardedForUrl', nextRequest.url, urlUpdates, {
-    'x-forwarded-headers': [
-      nextRequest.headers.get('x-forwarded-host'),
-      nextRequest.headers.get('x-forwarded-proto'),
-      nextRequest.headers.get('x-forwarded-port'),
-      nextRequest.headers.get('forwarded'),
-    ],
-  });
   const forwardedHost = nextRequest.headers.get('x-forwarded-host');
   const forwardedProto = nextRequest.headers.get('x-forwarded-proto');
-  const forwardedPort = nextRequest.headers.get('x-forwarded-port');
+  // DigitalOcean doesn't always provide the port ID -- so we forcibly
+  let forwardedPort: string | null = null;
+  switch (forwardedProto) {
+    case 'https':
+      forwardedPort = '443';
+      break;
+    case 'http':
+      forwardedPort = '80';
+      break;
+  }
 
   const url = new URL(nextRequest.url);
 

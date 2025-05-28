@@ -9,6 +9,13 @@ type UrlUpdates = {
 };
 
 export function constructForwardedForUrl(nextRequest: NextRequest, urlUpdates: UrlUpdates) {
+  console.log('DEBUG constructForwardedForUrl', nextRequest.url, urlUpdates, {
+    'x-forwarded-headers': [
+      nextRequest.headers.get('x-forwarded-host'),
+      nextRequest.headers.get('x-forwarded-proto'),
+      nextRequest.headers.get('x-forwarded-port'),
+    ],
+  });
   const forwardedHost = nextRequest.headers.get('x-forwarded-host');
   const forwardedProto = nextRequest.headers.get('x-forwarded-proto');
   const forwardedPort = nextRequest.headers.get('x-forwarded-port');

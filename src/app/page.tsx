@@ -42,6 +42,13 @@ function HomeImpl({ subreddit }: { subreddit: string | null }) {
                 This service verifies Singapore citizenship status through Singpass MyInfo, and
                 assigns you a flair in r/{subreddit}.
               </p>
+              <p>
+                We do not collect your name or NRIC/FIN, or store transaction data. For details, see
+                our{' '}
+                <Link href="/privacy" className="font-medium">
+                  Privacy Policy
+                </Link>
+              </p>
             </div>
           </>
         ) : (
@@ -60,13 +67,10 @@ function HomeImpl({ subreddit }: { subreddit: string | null }) {
             <Link href="/moderator" className="text-sm font-medium">
               Moderator of a subreddit? Set up the app →
             </Link>
-            <div className="text-sm text-gray-500">
-              We do not collect your name or NRIC/FIN, or store transaction data. For details, see
-              our{' '}
-              <Link href="/privacy" className="font-medium">
-                Privacy Policy
-              </Link>
-            </div>
+
+            <Link href="/privacy" className="text-sm font-medium">
+              Privacy Policy
+            </Link>
             <Link href="https://github.com/xkjyeah/myinfo-reddit" className="text-sm font-medium">
               Source code
             </Link>

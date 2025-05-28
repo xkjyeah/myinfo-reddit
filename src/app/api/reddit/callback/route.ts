@@ -75,7 +75,12 @@ export async function GET(request: NextRequest) {
 
     // Store the refresh token only for the target subreddit
     await saveRedditToken(targetSubredditFromState, reddit.refreshToken);
-    return NextResponse.redirect(new URL('/?', request.url));
+    return NextResponse.redirect(
+      new URL(
+        `/post-moderator-auth?subreddit=${encodeURIComponent(targetSubredditFromState)}`,
+        request.url
+      )
+    );
   } else if (requestedScopes.includes('identity')) {
     const user: Snoowrap.RedditUser = await (reddit.getMe as any)();
     const response = NextResponse.redirect(new URL('/api/reddit/flair', request.url));

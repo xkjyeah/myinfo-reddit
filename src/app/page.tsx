@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect } from 'react';
 
-import { FlairInfoProvider, StatusCodeToDescription } from './components/FlairInfoContext';
-import RenderFlair from './components/RenderFlair';
+import { FlairInfoProvider } from './components/FlairInfoContext';
+import StatusFlairTable from './components/StatusFlairTable';
 
 function HomeImpl({ subreddit }: { subreddit: string }) {
   return (
@@ -20,22 +20,7 @@ function HomeImpl({ subreddit }: { subreddit: string }) {
               : 'Verify your Singapore residential status to get your subreddit flair'}
           </p>
           <p>
-            <table style={{ width: '100%' }}>
-              <tr>
-                <th>Status</th>
-                <th>Flair</th>
-              </tr>
-              {Object.entries(StatusCodeToDescription || {}).map(([status, description]) => {
-                return (
-                  <tr key={status}>
-                    <td style={{ textAlign: 'left' }}>{description}</td>
-                    <td style={{ textAlign: 'left' }}>
-                      <RenderFlair code={status} />
-                    </td>
-                  </tr>
-                );
-              })}
-            </table>
+            <StatusFlairTable />
           </p>
         </div>
 

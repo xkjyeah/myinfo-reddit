@@ -20,7 +20,6 @@ describe('constructForwardedForUrl', () => {
       const request = createMockRequest('http://localhost:3000/test?param=value', {
         'x-forwarded-host': 'example.com',
         'x-forwarded-proto': 'https',
-        'x-forwarded-port': '443',
       });
 
       const result = constructForwardedForUrl(request, {});
@@ -38,18 +37,18 @@ describe('constructForwardedForUrl', () => {
       expect(result.toString()).toBe('http://example.com:3000/test');
     });
 
-    it('should use forwarded protocol only when host is not provided', () => {
+    it('should use forwarded protocol and portonly when host is not provided', () => {
       const request = createMockRequest('http://localhost:3000/test', {
         'x-forwarded-proto': 'https',
       });
 
       const result = constructForwardedForUrl(request, {});
 
-      expect(result.toString()).toBe('https://localhost:3000/test');
+      expect(result.toString()).toBe('https://localhost/test');
     });
 
     it('should handle forwarded host without port', () => {
-      const request = createMockRequest('http://localhost/test', {
+      const request = createMockRequest('http://localhost:3000/test', {
         'x-forwarded-host': 'example.com',
         'x-forwarded-proto': 'https',
       });
@@ -81,7 +80,7 @@ describe('constructForwardedForUrl', () => {
         pathname: '/new-path',
       });
 
-      expect(result.toString()).toBe('https://example.com:3000/new-path');
+      expect(result.toString()).toBe('https://example.com/new-path');
     });
 
     it('should apply search parameter updates', () => {
@@ -94,13 +93,13 @@ describe('constructForwardedForUrl', () => {
         search: '?new=param&another=value',
       });
 
-      expect(result.toString()).toBe('https://example.com:3000/test?new=param&another=value');
+      expect(result.toString()).toBe('https://example.com/test?new=param&another=value');
     });
 
     it('should apply host updates (overriding forwarded host)', () => {
-      const request = createMockRequest('http://localhost:3000/test', {
+      const request = createMockRequest('https://localhost:3000/test', {
         'x-forwarded-host': 'example.com',
-        'x-forwarded-proto': 'https',
+        'x-forwarded-proto': 'http',
       });
 
       const result = constructForwardedForUrl(request, {
@@ -108,10 +107,10 @@ describe('constructForwardedForUrl', () => {
         port: '3000',
       });
 
-      expect(result.toString()).toBe('https://override.com:3000/test');
+      expect(result.toString()).toBe('http://override.com:3000/test');
     });
 
-    it('should apply protocol updates (overriding forwarded protocol)', () => {
+    it('should apply protocol updates (overriding forwarded protocol and port)', () => {
       const request = createMockRequest('http://localhost:3000/test', {
         'x-forwarded-host': 'example.com',
         'x-forwarded-proto': 'https',
@@ -121,7 +120,7 @@ describe('constructForwardedForUrl', () => {
         protocol: 'http:',
       });
 
-      expect(result.toString()).toBe('http://example.com:3000/test');
+      expect(result.toString()).toBe('http://example.com:443/test');
     });
 
     it('should apply multiple URL updates simultaneously', () => {
@@ -165,7 +164,7 @@ describe('constructForwardedForUrl', () => {
       });
 
       expect(result.toString()).toBe(
-        'https://api.example.com:3000/api/v2/users/123?include=profile&sort=name&limit=10'
+        'https://api.example.com/api/v2/users/123?include=profile&sort=name&limit=10'
       );
     });
 
@@ -184,7 +183,6 @@ describe('constructForwardedForUrl', () => {
       const request = createMockRequest('http://localhost/test', {
         'x-forwarded-host': 'example.com',
         'x-forwarded-proto': 'https',
-        'x-forwarded-port': '443',
       });
 
       const result = constructForwardedForUrl(request, {});

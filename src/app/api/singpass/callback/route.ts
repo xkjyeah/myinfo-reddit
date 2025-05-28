@@ -24,6 +24,12 @@ export async function GET(request: NextRequest) {
 
     const configuration = await getConfiguration();
 
+    console.log('URLS: ', request.nextUrl, request.url, {
+      storedState,
+      codeVerifier,
+      nonce,
+      state,
+    });
     const tokenSet = await oidClient
       .authorizationCodeGrant(configuration, new URL(request.url), {
         pkceCodeVerifier: codeVerifier,

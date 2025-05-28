@@ -16,10 +16,11 @@ export default function Privacy() {
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Overview</h2>
               <p className="text-gray-700 mb-4">
-                The Reddit Singpass Verification app ("we", "our", or "us") is committed to
-                protecting your privacy. This Privacy Policy explains how we collect, use, and
-                safeguard your information when you use our service to verify your Singapore
-                residential status and receive Reddit flair.
+                The Reddit Singpass Verification app is a public service provided by Thos.ai
+                Software, UEN 53473433B ("we", "our", or "us"). We are committed to protecting your
+                privacy. This Privacy Policy explains how we collect, use, and safeguard your
+                information when you use our service to verify your Singapore residential status and
+                receive Reddit flair.
               </p>
             </section>
 
@@ -31,10 +32,6 @@ export default function Privacy() {
                 <li>
                   <strong>Residential Status:</strong> Your Singapore residential status (Citizen,
                   Permanent Resident, or Foreign Talent)
-                </li>
-                <li>
-                  <strong>Verification Data:</strong> Temporary authentication tokens to verify your
-                  identity
                 </li>
               </ul>
 
@@ -64,7 +61,6 @@ export default function Privacy() {
                 </li>
                 <li>To assign appropriate verified flairs to your Reddit account</li>
                 <li>To enable subreddit moderators to manage verified user flairs</li>
-                <li>To maintain the security and integrity of the verification process</li>
               </ul>
             </section>
 
@@ -74,24 +70,21 @@ export default function Privacy() {
               </h2>
               <ul className="list-disc list-inside text-gray-700 space-y-2">
                 <li>
-                  <strong>Minimal Storage:</strong> We only store your residential status code and
-                  Reddit username temporarily. After setting your flair, discard the data.
+                  <strong>Minimal storage:</strong> We only collect your residential status code and
+                  Reddit username temporarily. After setting your flair, we discard the data.
                 </li>
                 <li>
-                  <strong>No Personal Details:</strong> We do not store your full name, NRIC,
-                  address, or other personal information from MyInfo
+                  <strong>No personally identifiable Details:</strong> We do not at any point
+                  collect your full name, NRIC, address, or other personal information from MyInfo
                 </li>
                 <li>
                   <strong>Secure Transmission:</strong> All data is transmitted using
                   industry-standard encryption (HTTPS/TLS)
                 </li>
                 <li>
-                  <strong>Limited Retention:</strong> Session data is automatically deleted after a
-                  short period
-                </li>
-                <li>
                   <strong>Moderator Tokens:</strong> Subreddit moderator refresh tokens are stored
-                  securely and only used for flair management
+                  in a database and only used for flair management. The refresh tokens are scoped
+                  only to manage flair templates and assign flairs.
                 </li>
               </ul>
             </section>
@@ -129,10 +122,7 @@ export default function Privacy() {
                   <strong>Deletion:</strong> You can request deletion of your data at any time. If
                   you are a moderator, you can revoke the authorization to manage flairs at any time
                   at{' '}
-                  <Link
-                    href="https://www.reddit.com/prefs/apps"
-                    className="text-blue-500 hover:text-blue-600"
-                  >
+                  <Link href="https://www.reddit.com/prefs/apps">
                     https://www.reddit.com/prefs/apps
                   </Link>
                 </li>

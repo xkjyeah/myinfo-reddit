@@ -32,12 +32,15 @@ function Home() {
     });
   }, []);
 
+  const targetSubreddit = info?.targetSubreddit;
+
+  if (!targetSubreddit) {
+    return <div>No target subreddit found. How did you get here?</div>;
+  }
+
   return (
-    <FlairInfoProvider subreddit={info?.targetSubreddit || 'verifiedsingapore'}>
-      <HomeImpl
-        subreddit={info?.targetSubreddit || 'verifiedsingapore'}
-        residentialStatus={info?.residentialStatus || null}
-      />
+    <FlairInfoProvider subreddit={targetSubreddit}>
+      <HomeImpl subreddit={targetSubreddit} residentialStatus={info?.residentialStatus || null} />
     </FlairInfoProvider>
   );
 }

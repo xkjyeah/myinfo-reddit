@@ -77,9 +77,7 @@ export async function GET(request: NextRequest) {
       });
 
     // Create response
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = '/reddit-auth';
-    const response = NextResponse.redirect(redirectUrl);
+    const response = NextResponse.redirect('/reddit-auth');
 
     // Clear auth cookies
     response.cookies.delete('auth_state');

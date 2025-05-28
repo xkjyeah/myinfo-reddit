@@ -83,6 +83,13 @@ export async function GET(request: NextRequest) {
       })
     );
   } else if (requestedScopes.includes('identity')) {
+    if (!targetSubredditFromState) {
+      return NextResponse.json(
+        { error: 'No target subreddit found -- please try again' },
+        { status: 400 }
+      );
+    }
+
     const user: Snoowrap.RedditUser = await (reddit.getMe as any)();
     const response = NextResponse.redirect(
       constructForwardedForUrl(request, { pathname: '/api/reddit/flair' })
@@ -92,6 +99,7 @@ export async function GET(request: NextRequest) {
       {
         ...(await getAuthData(request)),
         redditUsername: user.name,
+        targetSubreddit: targetSubredditFromState,
       },
       60 * 5e3
     );

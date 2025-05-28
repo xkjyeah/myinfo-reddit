@@ -34,6 +34,9 @@ export async function GET(request: NextRequest) {
   if (!authData.redditUsername) {
     return NextResponse.json({ error: 'Missing reddit username' }, { status: 400 });
   }
+  if (!authData.targetSubreddit) {
+    return NextResponse.json({ error: 'Missing target subreddit' }, { status: 400 });
+  }
 
   try {
     // Initialize Reddit client
@@ -43,7 +46,7 @@ export async function GET(request: NextRequest) {
       clientSecret: REDDIT_CLIENT_SECRET,
       refreshToken: REDDIT_REFRESH_TOKEN,
     });
-    const targetSubreddit = authData.targetSubreddit;
+    const targetSubreddit = authData.targetSubreddit!;
 
     // Set the user's flair in the subreddit
     const subreddit: Snoowrap.Subreddit = await (reddit.getSubreddit as any)(targetSubreddit);

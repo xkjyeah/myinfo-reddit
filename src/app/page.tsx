@@ -16,8 +16,8 @@ function HomeImpl({ subreddit }: { subreddit: string }) {
           <h1 className="text-3xl font-bold text-gray-900">Reddit Singpass Verification</h1>
           <p className="mt-2 text-gray-600">
             {subreddit
-              ? `Verify your Singapore citizenship status to get your flair on r/${subreddit}`
-              : 'Verify your Singapore citizenship status to get your subreddit flair'}
+              ? `Verify your Singapore residential status to get your flair on r/${subreddit}`
+              : 'Verify your Singapore residential status to get your subreddit flair'}
           </p>
           <p>
             <table style={{ width: '100%' }}>
@@ -40,7 +40,7 @@ function HomeImpl({ subreddit }: { subreddit: string }) {
         </div>
 
         <div className="mt-8 space-y-4">
-          <Link href="/api/auth/singpass/login">
+          <Link href="/api/singpass/login">
             <Image
               src="images/myinfo.svg"
               alt="Retrieve my info with Singpass"

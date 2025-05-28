@@ -26,7 +26,7 @@ function Home() {
   } | null>(null);
 
   useEffect(() => {
-    fetch('/api/auth/info').then(async (r) => {
+    fetch('/api/info').then(async (r) => {
       const json = await r.json();
       setInfo(json);
     });
@@ -41,7 +41,13 @@ function Home() {
     </FlairInfoProvider>
   );
 }
-function HomeImpl({ residentialStatus }: { subreddit: string; residentialStatus: string | null }) {
+function HomeImpl({
+  subreddit,
+  residentialStatus,
+}: {
+  subreddit: string;
+  residentialStatus: string | null;
+}) {
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-lg">
@@ -61,15 +67,15 @@ function HomeImpl({ residentialStatus }: { subreddit: string; residentialStatus:
         <div className="mt-8 space-y-4">
           {residentialStatus ? (
             <Link
-              href="/api/auth/reddit"
+              href="/api/reddit/login"
               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
             >
-              Add your flair to reddit
+              Add your flair to r/{subreddit}
             </Link>
           ) : (
             <p>
               We were not able to retrieve your residential status from Myinfo. Do you want to{' '}
-              <Link href="/api/auth/singpass/login">try again</Link>?
+              <Link href="/api/singpass/login">try again</Link>?
             </p>
           )}
         </div>

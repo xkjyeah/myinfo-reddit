@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Snoowrap from 'snoowrap';
 
+import { getRedditToken } from '@/lib/db';
+
 import { getAuthData } from '../../auth/session';
 import { StatusToTemplateClass, getStatusToFlairTemplates } from '../flairs';
 import type { FlairV2 } from '../flairs';
@@ -8,7 +10,6 @@ import type { FlairV2 } from '../flairs';
 const REDDIT_CLIENT_ID = process.env.REDDIT_CLIENT_ID!;
 const REDDIT_CLIENT_SECRET = process.env.REDDIT_CLIENT_SECRET!;
 const REDDIT_USER_AGENT = process.env.REDDIT_USER_AGENT!;
-const REDDIT_REFRESH_TOKEN = process.env.REDDIT_REFRESH_TOKEN!;
 
 async function ensureFlairTemplatesExist(
   reddit: Snoowrap,
@@ -39,12 +40,21 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    // Error if the subreddit is not authorized
+    const refreshToken = await getRedditToken(authData.targetSubreddit);
+    if (!refreshToken) {
+      return NextResponse.json(
+        { error: 'This community has not allowed this app to add flair' },
+        { status: 400 }
+      );
+    }
+
     // Initialize Reddit client
     const reddit = new Snoowrap({
       userAgent: REDDIT_USER_AGENT,
       clientId: REDDIT_CLIENT_ID,
       clientSecret: REDDIT_CLIENT_SECRET,
-      refreshToken: REDDIT_REFRESH_TOKEN,
+      refreshToken,
     });
     const targetSubreddit = authData.targetSubreddit!;
 

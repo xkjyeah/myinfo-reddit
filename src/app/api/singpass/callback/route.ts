@@ -30,8 +30,14 @@ export async function GET(request: NextRequest) {
       nonce,
       state,
     });
+
+    // The currentUrl is used to submit the redirectUrl again. So we need it to
+    // have the correct domain and scheme.
+    const myinfoRedirectUrl = new URL(process.env.MYINFO_APP_REDIRECT_URL!);
+    const currentUrl = new URL(request.url);
+    myinfoRedirectUrl.search = currentUrl.search;
     const tokenSet = await oidClient
-      .authorizationCodeGrant(configuration, new URL(request.url), {
+      .authorizationCodeGrant(configuration, myinfoRedirectUrl, {
         pkceCodeVerifier: codeVerifier,
         expectedState: storedState,
         expectedNonce: nonce,

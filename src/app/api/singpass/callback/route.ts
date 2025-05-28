@@ -24,11 +24,16 @@ export async function GET(request: NextRequest) {
 
     const configuration = await getConfiguration();
 
-    const tokenSet = await oidClient.authorizationCodeGrant(configuration, new URL(request.url), {
-      pkceCodeVerifier: codeVerifier,
-      expectedState: storedState,
-      expectedNonce: nonce,
-    });
+    const tokenSet = await oidClient
+      .authorizationCodeGrant(configuration, new URL(request.url), {
+        pkceCodeVerifier: codeVerifier,
+        expectedState: storedState,
+        expectedNonce: nonce,
+      })
+      .catch((e) => {
+        console.log('Failed to get access token', e.message);
+        throw e;
+      });
 
     // If we ever want to store the entire JWT token (e.g. for *provable*
     // identity verification). But doing so runs the risk of deanonymizing
@@ -52,7 +57,12 @@ export async function GET(request: NextRequest) {
     // // Decode signed JWT. TODO: should verify kid and signature
 
     const sub = tokenSet.claims()?.sub;
-    const userInfo = await oidClient.fetchUserInfo(configuration, tokenSet.access_token, sub!);
+    const userInfo = await oidClient
+      .fetchUserInfo(configuration, tokenSet.access_token, sub!)
+      .catch((e) => {
+        console.log('Failed to get user info', e.message);
+        throw e;
+      });
 
     // Create response
     const redirectUrl = request.nextUrl.clone();

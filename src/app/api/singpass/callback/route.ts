@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
 
     // Create response
     const response = NextResponse.redirect(
-      constructForwardedForUrl(request, { pathname: '/reddit-auth' })
+      constructForwardedForUrl(request, { pathname: '/reddit-auth', search: '' })
     );
 
     // Clear auth cookies

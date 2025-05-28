@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import * as oidClient from 'openid-client';
 
 import { getAuthData, setAuthData } from '../../auth/session';
+import { updateUrlWith } from '../../util';
 import { getConfiguration } from '../keys';
 
 export async function GET(request: NextRequest) {
@@ -24,24 +25,20 @@ export async function GET(request: NextRequest) {
 
     const configuration = await getConfiguration();
 
-    console.log('URLS: ', request.nextUrl, request.url, {
-      storedState,
-      codeVerifier,
-      nonce,
-      state,
-    });
-
     // The currentUrl is used to submit the redirectUrl again. So we need it to
     // have the correct domain and scheme.
     const myinfoRedirectUrl = new URL(process.env.MYINFO_APP_REDIRECT_URL!);
     const currentUrl = new URL(request.url);
-    myinfoRedirectUrl.search = currentUrl.search;
     const tokenSet = await oidClient
-      .authorizationCodeGrant(configuration, myinfoRedirectUrl, {
-        pkceCodeVerifier: codeVerifier,
-        expectedState: storedState,
-        expectedNonce: nonce,
-      })
+      .authorizationCodeGrant(
+        configuration,
+        updateUrlWith(myinfoRedirectUrl, { search: currentUrl.search }),
+        {
+          pkceCodeVerifier: codeVerifier,
+          expectedState: storedState,
+          expectedNonce: nonce,
+        }
+      )
       .catch((e) => {
         console.log('Failed to get access token', e.message);
         throw e;
@@ -77,7 +74,7 @@ export async function GET(request: NextRequest) {
       });
 
     // Create response
-    const response = NextResponse.redirect('/reddit-auth');
+    const response = NextResponse.redirect(new URL('/reddit-auth', request.url));
 
     // Clear auth cookies
     response.cookies.delete('auth_state');

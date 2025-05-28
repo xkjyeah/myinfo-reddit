@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     try {
       const stateData = JSON.parse(state);
       requestedScopes = stateData.scopes || [];
-      targetSubredditFromState = stateData.targetSubreddit || null;
+      targetSubredditFromState = stateData.subreddit || null;
     } catch (error) {
       console.error('Failed to parse state parameter:', error);
       return NextResponse.json({ error: 'Invalid state parameter' }, { status: 400 });

@@ -6,9 +6,9 @@ const REDDIT_REDIRECT_URI = process.env.REDDIT_REDIRECT_URI!;
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
-  const targetSubreddit = searchParams.get('subreddit');
+  const subreddit = searchParams.get('subreddit');
 
-  if (!targetSubreddit) {
+  if (!subreddit) {
     return NextResponse.json({ error: 'Missing subreddit parameter' }, { status: 400 });
   }
 
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
   const state = JSON.stringify({
     random: Math.random().toString(36).substring(16),
     scopes: scopes,
-    targetSubreddit: targetSubreddit,
+    subreddit,
   });
 
   const authUrl = Snoowrap.getAuthUrl({

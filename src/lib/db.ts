@@ -49,12 +49,13 @@ export async function getTokenInfo(subreddit: string): Promise<{ refreshToken: s
 
 let initAttempted = false;
 async function maybeInitDatabase(): Promise<void> {
+  console.log(pool.options.connectionString);
   if (initAttempted) {
     return;
   }
 
+  await initDatabase();
   initAttempted = true;
-  return initDatabase();
 }
 
 // Initialize the database table
@@ -67,6 +68,8 @@ export async function initDatabase(): Promise<void> {
       updated_at TIMESTAMP NOT NULL DEFAULT NOW()
     )
   `;
+  console.log('before init');
 
   await pool.query(query);
+  console.log('after init');
 }

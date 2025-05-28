@@ -18,6 +18,8 @@ export async function saveRedditToken(subreddit: string, refreshToken: string): 
 }
 
 export async function getRedditToken(subreddit: string): Promise<string | null> {
+  await maybeInitDatabase();
+
   const query = 'SELECT refresh_token FROM subreddit_tokens WHERE subreddit = $1';
   const result = await pool.query(query, [subreddit]);
 
@@ -25,12 +27,16 @@ export async function getRedditToken(subreddit: string): Promise<string | null> 
 }
 
 export async function deleteRedditToken(subreddit: string): Promise<void> {
+  await maybeInitDatabase();
+
   const query = 'DELETE FROM subreddit_tokens WHERE subreddit = $1';
   await pool.query(query, [subreddit]);
 }
 
 export async function getTokenInfo(subreddit: string): Promise<{ refreshToken: string } | null> {
-  const query = 'SELECT refresh_token, FROM subreddit_tokens WHERE subreddit = $1';
+  await maybeInitDatabase();
+
+  const query = 'SELECT refresh_token FROM subreddit_tokens WHERE subreddit = $1';
   const result = await pool.query(query, [subreddit]);
 
   if (result.rows[0]) {
@@ -40,6 +46,16 @@ export async function getTokenInfo(subreddit: string): Promise<{ refreshToken: s
   }
 
   return null;
+}
+
+let initAttempted = false;
+async function maybeInitDatabase(): Promise<void> {
+  if (initAttempted) {
+    return;
+  }
+
+  initAttempted = true;
+  return initDatabase();
 }
 
 // Initialize the database table

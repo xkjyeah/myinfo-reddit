@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
         response,
         {
           ...(await getAuthData(request)),
-          subreddit,
+          targetSubreddit: subreddit,
         },
         60 * 5e3
       );

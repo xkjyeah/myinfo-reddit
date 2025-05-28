@@ -49,7 +49,11 @@ export async function getAuthData(request: NextRequest): Promise<Record<string, 
 
 export async function setAuthData(
   response: NextResponse,
-  data: Record<string, string>,
+  data: {
+    redditUsername?: string;
+    targetSubreddit?: string;
+    residentialStatus?: string;
+  },
   expiresInMs: number
 ) {
   const jwt = await new jose.SignJWT(data)

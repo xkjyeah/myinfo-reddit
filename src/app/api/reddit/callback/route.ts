@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
     // Check if a user is indeed the subreddit mod, by fetching the flair templates
     try {
       await reddit.getSubreddit(targetSubredditFromState).getUserFlairTemplates();
-    } catch (error) {
+    } catch {
       return NextResponse.json(
         { error: 'User is not a moderator of the target subreddit' },
         { status: 400 }

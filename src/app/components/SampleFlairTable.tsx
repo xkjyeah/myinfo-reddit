@@ -32,7 +32,7 @@ export default function SampleFlairTable() {
           </tr>
         </thead>
         <tbody>
-          {Object.entries(StatusCodeToDescription || {}).map(([status, description]) => {
+          {Object.entries(StatusCodeToDescription || {}).map(([status]) => {
             const flair = sampleFlairs[status as keyof typeof sampleFlairs];
             return (
               <tr key={status}>

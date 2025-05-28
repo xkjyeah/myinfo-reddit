@@ -1,10 +1,11 @@
 import * as crypto from 'crypto';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import * as oidClient from 'openid-client';
 
+import { getAuthData, setAuthData } from '../../auth/session';
 import { getConfiguration } from '../keys';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     // Generate code verifier
     const codeVerifier = await oidClient.randomPKCECodeVerifier();
@@ -31,6 +32,20 @@ export async function GET() {
 
     // Create response with cookies
     const response = NextResponse.redirect(authUrl.toString());
+
+    // Subreddit from search params -- if it exists, add it to the authData
+    const { searchParams } = new URL(request.url);
+    const subreddit = searchParams.get('subreddit');
+    if (subreddit) {
+      await setAuthData(
+        response,
+        {
+          ...(await getAuthData(request)),
+          subreddit,
+        },
+        60 * 5e3
+      );
+    }
 
     // Set cookies with the response
     response.cookies.set('code_verifier', codeVerifier, {

@@ -27,7 +27,7 @@ function HomeImpl({ subreddit }: { subreddit: string | null }) {
             </div>
 
             <div className="mt-8 space-y-4">
-              <Link href="/api/singpass/login">
+              <Link href={`/api/singpass/login?subreddit=${encodeURIComponent(subreddit)}`}>
                 <Image
                   src="images/myinfo.svg"
                   alt="Retrieve my info with Singpass"

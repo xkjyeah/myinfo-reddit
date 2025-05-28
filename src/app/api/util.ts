@@ -25,20 +25,20 @@ export function constructForwardedForUrl(nextRequest: NextRequest, urlUpdates: U
 
 export function updateUrlWith(url: URL, updates: UrlUpdates): URL {
   const newUrl = new URL(url);
-  if (updates.pathname) {
-    newUrl.pathname = updates.pathname;
+  if ('pathname' in updates) {
+    newUrl.pathname = updates.pathname!;
   }
-  if (updates.search) {
-    newUrl.search = updates.search;
+  if ('search' in updates) {
+    newUrl.search = updates.search!;
   }
-  if (updates.host) {
-    newUrl.host = updates.host;
+  if ('host' in updates) {
+    newUrl.host = updates.host!;
   }
-  if (updates.protocol) {
-    newUrl.protocol = updates.protocol;
+  if ('protocol' in updates) {
+    newUrl.protocol = updates.protocol!;
   }
-  if (updates.port) {
-    newUrl.port = updates.port;
+  if ('port' in updates) {
+    newUrl.port = updates.port!;
   }
   return newUrl;
 }

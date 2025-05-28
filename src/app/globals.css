@@ -19,3 +19,8 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Global link styles */
+a {
+  @apply text-blue-600 hover:text-blue-800;
+}

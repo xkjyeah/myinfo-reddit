@@ -2,7 +2,10 @@ import { Pool } from 'pg';
 
 // Initialize PostgreSQL connection pool
 export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL?.replace(/\?.*$/, '?sslmode=allow'),
+  // Drop the SSL parameters from the connection string
+  connectionString: process.env.DATABASE_URL?.replace(/\?.*$/, ''),
+  // DigitalOcean uses self-signed certificates, so we need to allow unverified connections
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 
 export async function saveRedditToken(subreddit: string, refreshToken: string): Promise<void> {

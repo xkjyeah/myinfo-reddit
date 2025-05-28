@@ -1,18 +1,26 @@
 import { NextRequest } from 'next/server';
 
-export function constructForwardedForUrl(nextRequest: NextRequest, url: URL) {
+type UrlUpdates = {
+  pathname?: string;
+  search?: string;
+  host?: string;
+  protocol?: string;
+};
+
+export function constructForwardedForUrl(nextRequest: NextRequest, urlUpdates: UrlUpdates) {
   const forwardedHost = nextRequest.headers.get('x-forwarded-host');
   const forwardedProto = nextRequest.headers.get('x-forwarded-proto');
+
+  const url = new URL(nextRequest.url);
+
   return updateUrlWith(url, {
     host: forwardedHost ?? url.host,
     protocol: forwardedProto ?? url.protocol,
+    ...urlUpdates,
   });
 }
 
-export function updateUrlWith(
-  url: URL,
-  updates: { pathname?: string; search?: string; host?: string; protocol?: string }
-) {
+export function updateUrlWith(url: URL, updates: UrlUpdates): URL {
   const newUrl = new URL(url);
   if (updates.pathname) {
     newUrl.pathname = updates.pathname;

@@ -4,6 +4,7 @@ import Snoowrap from 'snoowrap';
 import { saveRedditToken } from '@/lib/db';
 
 import { getAuthData, setAuthData } from '../../auth/session';
+import { constructForwardedForUrl } from '../../util';
 
 const REDDIT_CLIENT_ID = process.env.REDDIT_CLIENT_ID!;
 const REDDIT_CLIENT_SECRET = process.env.REDDIT_CLIENT_SECRET!;
@@ -76,14 +77,16 @@ export async function GET(request: NextRequest) {
     // Store the refresh token only for the target subreddit
     await saveRedditToken(targetSubredditFromState, reddit.refreshToken);
     return NextResponse.redirect(
-      new URL(
-        `/post-moderator-auth?subreddit=${encodeURIComponent(targetSubredditFromState)}`,
-        request.url
-      )
+      constructForwardedForUrl(request, {
+        pathname: '/post-moderator-auth',
+        search: `?subreddit=${encodeURIComponent(targetSubredditFromState)}`,
+      })
     );
   } else if (requestedScopes.includes('identity')) {
     const user: Snoowrap.RedditUser = await (reddit.getMe as any)();
-    const response = NextResponse.redirect(new URL('/api/reddit/flair', request.url));
+    const response = NextResponse.redirect(
+      constructForwardedForUrl(request, { pathname: '/api/reddit/flair' })
+    );
     await setAuthData(
       response,
       {

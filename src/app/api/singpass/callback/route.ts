@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import * as oidClient from 'openid-client';
 
 import { getAuthData, setAuthData } from '../../auth/session';
-import { updateUrlWith } from '../../util';
+import { constructForwardedForUrl, updateUrlWith } from '../../util';
 import { getConfiguration } from '../keys';
 
 export async function GET(request: NextRequest) {
@@ -74,7 +74,9 @@ export async function GET(request: NextRequest) {
       });
 
     // Create response
-    const response = NextResponse.redirect(new URL('/reddit-auth', request.url));
+    const response = NextResponse.redirect(
+      constructForwardedForUrl(request, { pathname: '/reddit-auth' })
+    );
 
     // Clear auth cookies
     response.cookies.delete('auth_state');

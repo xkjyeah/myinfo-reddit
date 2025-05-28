@@ -14,6 +14,7 @@ export function constructForwardedForUrl(nextRequest: NextRequest, urlUpdates: U
       nextRequest.headers.get('x-forwarded-host'),
       nextRequest.headers.get('x-forwarded-proto'),
       nextRequest.headers.get('x-forwarded-port'),
+      nextRequest.headers.get('forwarded'),
     ],
   });
   const forwardedHost = nextRequest.headers.get('x-forwarded-host');

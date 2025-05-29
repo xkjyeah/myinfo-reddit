@@ -3,7 +3,7 @@ import * as jose from 'jose';
 import { NextRequest, NextResponse } from 'next/server';
 
 // Use pbkdf2 to derive a key
-const key = await crypto.pbkdf2Sync(
+const key = crypto.pbkdf2Sync(
   new TextEncoder().encode(process.env.SESSION_KEY!),
   new TextEncoder().encode('reddit-myinfo'),
   1000,

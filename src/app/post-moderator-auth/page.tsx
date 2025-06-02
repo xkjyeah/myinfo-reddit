@@ -98,7 +98,7 @@ function PostModeratorAuthImpl({ subreddit }: { subreddit: string }) {
           <p className="text-sm text-gray-600 mb-4">
             Here's what the flairs will look like once configured:
           </p>
-          <StatusFlairTable />
+          <StatusFlairTable subreddit={subreddit} />
         </div>
 
         <div className="text-center">

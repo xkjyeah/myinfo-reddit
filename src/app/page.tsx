@@ -21,9 +21,7 @@ function HomeImpl({ subreddit }: { subreddit: string | null }) {
               <p className="mt-2 text-gray-600">
                 Verify your Singapore residential status to get your flair on r/{subreddit}.
               </p>
-              <p>
-                <StatusFlairTable />
-              </p>
+              <StatusFlairTable subreddit={subreddit} />
             </div>
 
             <div className="mt-8 space-y-4">

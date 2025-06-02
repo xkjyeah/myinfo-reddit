@@ -3,10 +3,9 @@ import { jest } from '@jest/globals';
 import * as crypto from 'crypto';
 import * as jose from 'jose';
 import { NextRequest, NextResponse } from 'next/server';
-import * as oidClient from 'openid-client';
 import * as request from 'request-promise';
 
-import { getRedditToken, saveRedditToken } from '@/lib/db';
+import * as session from '@/app/api/auth/session';
 import * as db from '@/lib/db';
 
 import { GET as redditSubredditOwnerAuth } from '../../api/auth/subreddit-owner/route';
@@ -14,7 +13,6 @@ import { GET as redditCallback } from '../reddit/callback/route';
 import { GET as redditFlair } from '../reddit/flair/route';
 import { GET as redditLogin } from '../reddit/login/route';
 import { GET as singpassCallback } from '../singpass/callback/route';
-import * as keys from '../singpass/keys';
 // Import the route handlers
 import { GET as singpassLogin } from '../singpass/login/route';
 import myinfoOpenidConfig from './fixtures/myinfo-openid-config';
@@ -40,10 +38,9 @@ jest.mock('openid-client', () => {
 //   };
 // });
 
-const mockOidClient = oidClient as jest.Mocked<typeof oidClient>;
 const mockDb = {
-  saveRedditToken: saveRedditToken as jest.MockedFunction<typeof saveRedditToken>,
-  getRedditToken: getRedditToken as jest.MockedFunction<typeof getRedditToken>,
+  saveRedditToken: db.saveRedditToken as jest.MockedFunction<typeof db.saveRedditToken>,
+  getRedditToken: db.getRedditToken as jest.MockedFunction<typeof db.getRedditToken>,
 };
 
 // Mock environment variables
@@ -295,7 +292,7 @@ describe('End-to-End OAuth Flow', () => {
 
       mockEndpoint({
         url: 'https://stg-id.singpass.gov.sg/userinfo',
-        response: async ({ body }) => {
+        response: async () => {
           return Promise.resolve(
             new Response(
               await new jose.SignJWT({ residentialstatus: { code: 'C' } })
@@ -434,17 +431,6 @@ describe('End-to-End OAuth Flow', () => {
     it('should complete the moderator authorization flow', async () => {
       const subreddit = 'testsubreddit';
 
-      // Mock moderator Reddit instance with modflair permissions
-      const mockModeratorRedditInstance = {
-        refreshToken: 'mock-moderator-refresh-token',
-        getSubreddit: jest.fn().mockReturnValue({
-          display_name: subreddit,
-          getUserFlairTemplates: jest
-            .fn<any>()
-            .mockResolvedValue([{ css_class: 'verified-citizen', text: 'Citizen' }]),
-        }),
-      };
-
       // Step 1: Moderator initiates Reddit OAuth with modflair scope
       const modAuthorizeRequest = createMockRequest(
         `https://example.com/api/reddit/subreddit-owner?subreddit=${subreddit}`
@@ -511,15 +497,11 @@ describe('End-to-End OAuth Flow', () => {
       mockEndpoint({
         url: 'https://oauth.reddit.com/r/testsubreddit/api/flairselector',
         method: 'POST',
-        response: async ({ body }) => {
+        response: async () => {
           return Promise.resolve(new Response(JSON.stringify([])));
         },
       });
-      const saveRedditTokenMock = (db.saveRedditToken as jest.Mock<any>).mockImplementation(
-        (subreddit: string, token: string) => {
-          return Promise.resolve({});
-        }
-      );
+      const saveRedditTokenMock = (db.saveRedditToken as jest.Mock<any>).mockResolvedValue({});
 
       const modCallbackUrl = `https://example.com/api/reddit/callback?code=mod-auth-code&state=${encodeURIComponent(
         JSON.stringify({
@@ -546,7 +528,7 @@ describe('End-to-End OAuth Flow', () => {
       const flairRequest = createMockRequest('https://example.com/api/reddit/flair');
 
       // Mock auth data with required fields
-      jest.spyOn(require('../auth/session'), 'getAuthData').mockResolvedValueOnce({
+      jest.spyOn(session, 'getAuthData').mockResolvedValueOnce({
         residentialStatus: 'C',
         redditUsername: 'test-user',
         targetSubreddit: 'testsubreddit',
@@ -601,7 +583,7 @@ describe('End-to-End OAuth Flow', () => {
       const flairRequest = createMockRequest('https://example.com/api/reddit/flair');
 
       // Mock auth data
-      jest.spyOn(require('../auth/session'), 'getAuthData').mockResolvedValueOnce({
+      jest.spyOn(session, 'getAuthData').mockResolvedValueOnce({
         residentialStatus: 'C',
         redditUsername: 'test-user',
         targetSubreddit: 'testsubreddit',
@@ -626,7 +608,7 @@ describe('End-to-End OAuth Flow', () => {
       'should assign correct flair for residential status %s',
       async (statusCode, expectedText, expectedCssClass) => {
         // Mock session assignment
-        jest.spyOn(require('../auth/session'), 'getAuthData').mockResolvedValueOnce({
+        jest.spyOn(session, 'getAuthData').mockResolvedValueOnce({
           residentialStatus: statusCode,
           redditUsername: 'test-user',
           targetSubreddit: 'testsubreddit',
@@ -685,7 +667,7 @@ describe('End-to-End OAuth Flow', () => {
   function mockUserFlairV2(flairs?: any) {
     mockEndpoint({
       url: 'https://oauth.reddit.com/r/testsubreddit/api/user_flair_v2',
-      response: async ({ body }) => {
+      response: async () => {
         return Promise.resolve(
           new Response(
             JSON.stringify(

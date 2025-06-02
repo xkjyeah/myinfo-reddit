@@ -17,7 +17,9 @@ async function ensureFlairTemplatesExist(
     (k) => !(k in availableFlairTemplates)
   );
   if (missingFlairs.length > 0) {
-    throw new Error(`Missing flair templates for ${missingFlairs.join(', ')}`);
+    throw new Error(
+      `Missing flair templates for ${missingFlairs.join(', ')}. Please ask the moderator of the subreddit to complete the setup of this app.`
+    );
   }
   return availableFlairTemplates;
 }
@@ -61,7 +63,12 @@ export async function GET(request: NextRequest) {
     // Set the user's flair in the subreddit
     const subreddit: Snoowrap.Subreddit = await (reddit.getSubreddit as any)(targetSubreddit);
 
-    const flairTemplates = await ensureFlairTemplatesExist(reddit, subreddit);
+    let flairTemplates;
+    try {
+      flairTemplates = await ensureFlairTemplatesExist(reddit, subreddit);
+    } catch (error) {
+      return NextResponse.json({ error: (error as Error).message }, { status: 400 });
+    }
 
     const flairToSet = flairTemplates[authData.residentialStatus || ''];
 

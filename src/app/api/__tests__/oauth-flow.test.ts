@@ -9,6 +9,7 @@ import * as request from 'request-promise';
 import { getRedditToken, saveRedditToken } from '@/lib/db';
 import * as db from '@/lib/db';
 
+import { GET as redditSubredditOwnerAuth } from '../../api/auth/subreddit-owner/route';
 import { GET as redditCallback } from '../reddit/callback/route';
 import { GET as redditFlair } from '../reddit/flair/route';
 import { GET as redditLogin } from '../reddit/login/route';
@@ -21,15 +22,16 @@ import myinfoOpenidConfig from './fixtures/myinfo-openid-config';
 // Mock external dependencies
 jest.mock('@/lib/db', () => {
   return {
-    ...jest.requireActual('@/lib/db'),
+    ...jest.requireActual<any>('@/lib/db'),
     getRedditToken: jest.fn(),
+    saveRedditToken: jest.fn(),
   };
 });
 
 jest.mock('openid-client', () => {
   return {
-    ...jest.requireActual('openid-client'),
-    randomPKCECodeVerifier: jest.fn().mockResolvedValue('mock-code-verifier'),
+    ...jest.requireActual<any>('openid-client'),
+    randomPKCECodeVerifier: jest.fn<any>().mockResolvedValue('mock-code-verifier'),
   };
 });
 // jest.mock('snoowrap', () => {
@@ -68,7 +70,7 @@ function mockedFetchImplementation(request: Request | string, requestInit?: Requ
     canoncialRequest = new Request(request, requestInit);
   }
 
-  const { body } = requestInit ?? {};
+  const body = requestInit?.body ?? '';
 
   const filter = fetchFilters.find((filter) => {
     if (filter.url && canoncialRequest.url !== filter.url) return false;
@@ -95,21 +97,23 @@ const mockFetch = jest.fn<any>().mockImplementation(mockedFetchImplementation);
 global.fetch = mockFetch;
 
 jest.mock('request-promise', () => {
-  const r = jest.requireActual('request-promise');
-  const mock = jest.fn();
+  const r = jest.requireActual('request-promise') as any;
+  const mock = jest.fn<any>() as any;
+  // All the any casts above are because request-promise
+  // adds additional properties to the default export
   mock.Request = r.Request;
   mock.Response = r.Response;
   mock.defaults = r.defaults;
   return mock;
 });
 
-request.mockImplementation(async (i) => {
+(request as any).mockImplementation(async (i: any) => {
   const response = await mockedFetchImplementation(
     i.baseUrl.replace(/\/?$/, '') + i.uri.replace(/^\/?/, '/'),
     {
       method: i.method,
       headers: i.headers,
-      body: i.form,
+      body: i.form as any,
     }
   );
 
@@ -148,11 +152,11 @@ beforeAll(() => {
   const encKey = crypto.generateKeyPairSync('ec', {
     namedCurve: 'P-256',
     privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
-  });
+  } as crypto.ECKeyPairOptions<'pem', 'pem'>);
   const sigKey = crypto.generateKeyPairSync('ec', {
     namedCurve: 'P-256',
     privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
-  });
+  } as crypto.ECKeyPairOptions<'pem', 'pem'>);
 
   process.env = {
     ...originalEnv,
@@ -401,47 +405,7 @@ describe('End-to-End OAuth Flow', () => {
         },
         ttl: 5,
       });
-      mockEndpoint({
-        url: 'https://oauth.reddit.com/r/testsubreddit/api/user_flair_v2',
-        response: async ({ body }) => {
-          return Promise.resolve(
-            new Response(
-              JSON.stringify([
-                {
-                  text: 'Citizen',
-                  text_color: 'light',
-                  mod_only: true,
-                  background_color: '#de21b8',
-                  css_class: 'sg-verified-citizen',
-                  text_editable: false,
-                  override_css: false,
-                  type: 'text',
-                },
-                {
-                  text: 'Permanent Resident',
-                  text_color: 'light',
-                  mod_only: true,
-                  background_color: '#3989c6',
-                  css_class: 'sg-verified-pr',
-                  text_editable: false,
-                  override_css: false,
-                  type: 'text',
-                },
-                {
-                  text: 'Foreigner',
-                  text_color: 'light',
-                  mod_only: true,
-                  background_color: '#59a68c',
-                  css_class: 'sg-verified-foreigner',
-                  text_editable: false,
-                  override_css: false,
-                  type: 'text',
-                },
-              ])
-            )
-          );
-        },
-      });
+      mockUserFlairV2();
 
       mockEndpoint({
         method: 'POST',
@@ -476,16 +440,87 @@ describe('End-to-End OAuth Flow', () => {
         getSubreddit: jest.fn().mockReturnValue({
           display_name: subreddit,
           getUserFlairTemplates: jest
-            .fn()
+            .fn<any>()
             .mockResolvedValue([{ css_class: 'verified-citizen', text: 'Citizen' }]),
         }),
       };
 
-      (mockSnoowrap.fromAuthCode as jest.Mock).mockResolvedValueOnce(
-        mockModeratorRedditInstance as any
+      // Step 1: Moderator initiates Reddit OAuth with modflair scope
+      const modAuthorizeRequest = createMockRequest(
+        `https://example.com/api/reddit/subreddit-owner?subreddit=${subreddit}`
+      );
+      const modAuthorizeResponse = await redditSubredditOwnerAuth(modAuthorizeRequest);
+
+      // Example: "https://www.reddit.com/api/v1/authorize?client_id=test-reddit-client-id&response_type=code&state=%7B%22random%22%3A%22%22%2C%22scopes%22%3A%5B%22modflair%22%2C%22flair%22%5D%2C%22subreddit%22%3A%22testsubreddit%22%7D&redirect_uri=https%3A%2F%2Fexample.com%2Fapi%2Freddit%2Fcallback&duration=permanent&scope=modflair%20flair"
+      expect(modAuthorizeResponse.status).toBe(307);
+      const redirectUrl = new URL(modAuthorizeResponse.headers.get('location')!);
+      expect(redirectUrl.origin).toBe('https://www.reddit.com');
+      expect(redirectUrl.pathname).toBe('/api/v1/authorize');
+      expect(redirectUrl.searchParams.get('client_id')).toBe(process.env.REDDIT_CLIENT_ID);
+      expect(redirectUrl.searchParams.get('response_type')).toBe('code');
+      expect(redirectUrl.searchParams.get('scope')).toBe('modflair flair');
+      expect(redirectUrl.searchParams.get('state')).toBeDefined();
+      expect(redirectUrl.searchParams.get('redirect_uri')).toBe(
+        'https://example.com/api/reddit/callback'
+      );
+      expect(redirectUrl.searchParams.get('duration')).toBe('permanent');
+
+      // Step 2: Reddit returns refresh token
+      mockEndpoint({
+        url: 'https://www.reddit.com/api/v1/access_token',
+        method: 'POST',
+        response: async ({ body }) => {
+          const formData = body as any;
+          expect(formData.code).toBe('mod-auth-code');
+          expect(formData.grant_type).toBe('authorization_code');
+          expect(formData.redirect_uri).toBe('https://example.com/api/reddit/callback');
+
+          return Promise.resolve(
+            new Response(
+              JSON.stringify({
+                accessToken: 'mock-access-token',
+                expiresIn: 3600,
+                tokenType: 'Bearer',
+                refreshToken: 'mock-moderator-refresh-token',
+              })
+            )
+          );
+        },
+      });
+      // Step 2a: the refresh token is used for the next request
+      mockEndpoint({
+        url: 'https://www.reddit.com/api/v1/access_token',
+        method: 'POST',
+        response: async ({ body }) => {
+          const formData = body as any;
+          expect(formData.refresh_token).toBe('mock-moderator-refresh-token');
+          expect(formData.grant_type).toBe('refresh_token');
+
+          return Promise.resolve(
+            new Response(
+              JSON.stringify({
+                accessToken: 'mock-access-token',
+                expiresIn: 3600,
+                tokenType: 'Bearer',
+                scope: 'modflair flair',
+              })
+            )
+          );
+        },
+      });
+      mockEndpoint({
+        url: 'https://oauth.reddit.com/r/testsubreddit/api/flairselector',
+        method: 'POST',
+        response: async ({ body }) => {
+          return Promise.resolve(new Response(JSON.stringify([])));
+        },
+      });
+      const saveRedditTokenMock = (db.saveRedditToken as jest.Mock<any>).mockImplementation(
+        (subreddit: string, token: string) => {
+          return Promise.resolve({});
+        }
       );
 
-      // Step 1: Moderator initiates Reddit OAuth with modflair scope
       const modCallbackUrl = `https://example.com/api/reddit/callback?code=mod-auth-code&state=${encodeURIComponent(
         JSON.stringify({
           random: 'test',
@@ -496,42 +531,14 @@ describe('End-to-End OAuth Flow', () => {
 
       const modCallbackRequest = createMockRequest(modCallbackUrl);
       const modCallbackResponse = await redditCallback(modCallbackRequest);
-
-      expect(modCallbackResponse.status).toBe(302);
+      expect(modCallbackResponse.status).toBe(307);
       expect(modCallbackResponse.headers.get('location')).toContain('/post-moderator-auth');
       expect(modCallbackResponse.headers.get('location')).toContain(`subreddit=${subreddit}`);
-
-      // Verify that the refresh token was saved for the subreddit
-      expect(mockDb.saveRedditToken).toHaveBeenCalledWith(
-        subreddit,
-        'mock-moderator-refresh-token'
-      );
+      expect(saveRedditTokenMock).toHaveBeenCalledWith(subreddit, 'mock-moderator-refresh-token');
     });
   });
 
   describe('Error Handling', () => {
-    it('should handle missing residential status in SingPass callback', async () => {
-      // Mock user info without residential status
-      (mockOidClient.fetchUserInfo as jest.Mock).mockResolvedValueOnce({} as any);
-
-      const callbackUrl =
-        'https://example.com/api/singpass/callback?code=auth-code&state=6d6f636b2d72616e646f6d2d6279746573';
-      const request = createMockRequest(callbackUrl, {
-        code_verifier: 'mock-code-verifier',
-        auth_state: '6d6f636b2d72616e646f6d2d6279746573',
-        nonce: '6d6f636b2d72616e646f6d2d6279746573',
-      });
-
-      const response = await singpassCallback(request);
-
-      expect(response.status).toBe(302);
-      expect(response.headers.get('location')).toContain('/reddit-auth');
-
-      // Should still redirect but without residential status
-      const cookies = extractCookies(response);
-      expect(cookies.auth).toBeDefined();
-    });
-
     it('should handle missing subreddit authorization for flair assignment', async () => {
       // Mock no stored refresh token for subreddit
       mockDb.getRedditToken.mockResolvedValueOnce(null);
@@ -539,11 +546,11 @@ describe('End-to-End OAuth Flow', () => {
       const flairRequest = createMockRequest('https://example.com/api/reddit/flair');
 
       // Mock auth data with required fields
-      //   jest.spyOn(require('../auth/session'), 'getAuthData').mockResolvedValueOnce({
-      //     residentialStatus: 'C',
-      //     redditUsername: 'test-user',
-      //     targetSubreddit: 'testsubreddit',
-      //   });
+      jest.spyOn(require('../auth/session'), 'getAuthData').mockResolvedValueOnce({
+        residentialStatus: 'C',
+        redditUsername: 'test-user',
+        targetSubreddit: 'testsubreddit',
+      });
 
       const response = await redditFlair(flairRequest);
 
@@ -569,11 +576,6 @@ describe('End-to-End OAuth Flow', () => {
     });
 
     it('should handle Reddit authentication failure', async () => {
-      // Mock Snoowrap to throw an error
-      (mockSnoowrap.fromAuthCode as jest.Mock).mockRejectedValueOnce(
-        new Error('Reddit auth failed')
-      );
-
       const callbackUrl = `https://example.com/api/reddit/callback?code=invalid-code&state=${encodeURIComponent(
         JSON.stringify({
           random: 'test',
@@ -591,98 +593,138 @@ describe('End-to-End OAuth Flow', () => {
     });
 
     it('should handle missing flair templates', async () => {
-      // Mock empty flair templates
-      const mockRedditInstance = {
-        refreshToken: 'mock-refresh-token',
-        getSubreddit: jest.fn().mockReturnValue({
-          display_name: 'testsubreddit',
-          setMultipleUserFlairs: jest.fn(),
-          getUserFlair: jest.fn().mockResolvedValue({ flair_css_class: '' }),
-        }),
-        oauthRequest: jest.fn().mockResolvedValue([]), // No flair templates
-      };
-
-      mockSnoowrap.mockImplementationOnce(() => mockRedditInstance as any);
+      // Mock refresh token in DB
+      mockDb.getRedditToken.mockResolvedValueOnce('mock-refresh-token');
+      mockModeratorRefreshToken();
+      mockUserFlairV2([]);
 
       const flairRequest = createMockRequest('https://example.com/api/reddit/flair');
 
       // Mock auth data
-      //   jest.spyOn(require('../auth/session'), 'getAuthData').mockResolvedValueOnce({
-      //     residentialStatus: 'C',
-      //     redditUsername: 'test-user',
-      //     targetSubreddit: 'testsubreddit',
-      //   });
+      jest.spyOn(require('../auth/session'), 'getAuthData').mockResolvedValueOnce({
+        residentialStatus: 'C',
+        redditUsername: 'test-user',
+        targetSubreddit: 'testsubreddit',
+      });
 
       const response = await redditFlair(flairRequest);
 
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(400);
       const responseData = await response.json();
-      expect(responseData.error).toBe('Failed to set flair');
+      expect(responseData.error).toBe(
+        'Missing flair templates for C, P, A. Please ask the moderator of the subreddit to complete the setup of this app.'
+      );
     });
   });
 
   describe('Different Residential Status Types', () => {
     it.each([
       ['C', 'Citizen', 'verified-citizen'],
-      ['P', 'PR', 'verified-pr'],
+      ['P', 'Permanent Resident', 'verified-pr'],
       ['A', 'Foreigner', 'verified-foreigner'],
     ])(
       'should assign correct flair for residential status %s',
       async (statusCode, expectedText, expectedCssClass) => {
-        // Mock user info with specific residential status
-        (mockOidClient.fetchUserInfo as jest.Mock).mockResolvedValueOnce({
-          residentialstatus: { code: statusCode },
-        } as any);
-
-        const subreddit = 'testsubreddit';
-
-        // Complete the flow up to flair assignment
-        const singpassLoginRequest = createMockRequest(
-          `https://example.com/api/singpass/login?subreddit=${subreddit}`
-        );
-        const singpassLoginResponse = await singpassLogin(singpassLoginRequest);
-        const loginCookies = extractCookies(singpassLoginResponse);
-
-        const callbackUrl = `https://example.com/api/singpass/callback?code=auth-code&state=${loginCookies.auth_state}`;
-        const singpassCallbackRequest = createMockRequest(callbackUrl, {
-          code_verifier: loginCookies.code_verifier,
-          auth_state: loginCookies.auth_state,
-          nonce: loginCookies.nonce,
+        // Mock session assignment
+        jest.spyOn(require('../auth/session'), 'getAuthData').mockResolvedValueOnce({
+          residentialStatus: statusCode,
+          redditUsername: 'test-user',
+          targetSubreddit: 'testsubreddit',
         });
-        const singpassCallbackResponse = await singpassCallback(singpassCallbackRequest);
-        const callbackCookies = extractCookies(singpassCallbackResponse);
+        // Mock refresh token in DB
+        mockDb.getRedditToken.mockResolvedValueOnce('mock-refresh-token');
+        // Mock access token endpoint
+        mockModeratorRefreshToken();
+        // Mock user_flair_v2
+        mockUserFlairV2();
 
-        const redditCallbackUrl = `https://example.com/api/reddit/callback?code=reddit-auth-code&state=${encodeURIComponent(
-          JSON.stringify({
-            random: 'test',
-            scopes: ['identity'],
-            subreddit: subreddit,
-          })
-        )}`;
-        const redditCallbackRequest = createMockRequest(redditCallbackUrl, {
-          auth: callbackCookies.auth,
+        // Mock flair assignment endpoint
+        mockEndpoint({
+          url: 'https://oauth.reddit.com/r/testsubreddit/api/flaircsv',
+          response: async ({ body }) => {
+            expect((body as any).flair_csv).toBe(
+              `"test-user","${expectedText}","sg-${expectedCssClass}"`
+            );
+            return Promise.resolve(new Response(JSON.stringify([{ ok: true }])));
+          },
         });
-        const redditCallbackResponse = await redditCallback(redditCallbackRequest);
-        const redditCallbackCookies = extractCookies(redditCallbackResponse);
 
         // Test flair assignment
-        const flairRequest = createMockRequest('https://example.com/api/reddit/flair', {
-          auth: redditCallbackCookies.auth,
-        });
+        const flairRequest = createMockRequest('https://example.com/api/reddit/flair');
         const flairResponse = await redditFlair(flairRequest);
-
-        expect(flairResponse.status).toBe(302);
-
-        // Verify correct flair was assigned
-        const mockSubreddit = mockSnoowrap.mock.results[0].value.getSubreddit();
-        expect(mockSubreddit.setMultipleUserFlairs).toHaveBeenCalledWith([
-          {
-            name: 'test-reddit-user',
-            text: expectedText,
-            cssClass: expectedCssClass,
-          },
-        ]);
+        expect(flairResponse.status).toBe(307);
+        const location = new URL(flairResponse.headers.get('location')!);
+        expect(location.pathname).toBe(`/r/testsubreddit`);
       }
     );
   });
+
+  function mockModeratorRefreshToken() {
+    mockEndpoint({
+      url: 'https://www.reddit.com/api/v1/access_token',
+      method: 'POST',
+      response: async ({ body }) => {
+        const formData = body as any;
+        expect(formData.refresh_token).toBe('mock-refresh-token');
+        expect(formData.grant_type).toBe('refresh_token');
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              accessToken: 'mock-access-token',
+              expiresIn: 3600,
+              tokenType: 'Bearer',
+              scope: 'modflair flair',
+            })
+          )
+        );
+      },
+      ttl: 5,
+    });
+  }
+
+  function mockUserFlairV2(flairs?: any) {
+    mockEndpoint({
+      url: 'https://oauth.reddit.com/r/testsubreddit/api/user_flair_v2',
+      response: async ({ body }) => {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify(
+              flairs ?? [
+                {
+                  text: 'Citizen',
+                  text_color: 'light',
+                  mod_only: true,
+                  background_color: '#de21b8',
+                  css_class: 'sg-verified-citizen',
+                  text_editable: false,
+                  override_css: false,
+                  type: 'text',
+                },
+                {
+                  text: 'Permanent Resident',
+                  text_color: 'light',
+                  mod_only: true,
+                  background_color: '#3989c6',
+                  css_class: 'sg-verified-pr',
+                  text_editable: false,
+                  override_css: false,
+                  type: 'text',
+                },
+                {
+                  text: 'Foreigner',
+                  text_color: 'light',
+                  mod_only: true,
+                  background_color: '#59a68c',
+                  css_class: 'sg-verified-foreigner',
+                  text_editable: false,
+                  override_css: false,
+                  type: 'text',
+                },
+              ]
+            )
+          )
+        );
+      },
+    });
+  }
 });

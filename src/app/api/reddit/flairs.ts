@@ -25,10 +25,6 @@ export async function getStatusToFlairTemplates(reddit: Snoowrap, subreddit: Sno
     method: 'GET',
   });
 
-  if (flairs.length === 0) {
-    throw new Error('No flairs found');
-  }
-
   return Object.fromEntries(
     Object.entries(StatusToTemplateClass)
       .map(([status, regex]): [string, FlairV2] | null => {

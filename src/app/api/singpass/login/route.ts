@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import * as oidClient from 'openid-client';
 
 import { getAuthData, setAuthData } from '../../auth/session';
-import { getConfiguration } from '../keys';
+import { getConfiguration } from '../oidConfiguration';
 
 export async function GET(request: NextRequest) {
   try {

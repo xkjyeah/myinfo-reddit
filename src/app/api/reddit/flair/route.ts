@@ -7,10 +7,6 @@ import { getAuthData } from '../../auth/session';
 import { StatusToTemplateClass, getStatusToFlairTemplates } from '../flairs';
 import type { FlairV2 } from '../flairs';
 
-const REDDIT_CLIENT_ID = process.env.REDDIT_CLIENT_ID!;
-const REDDIT_CLIENT_SECRET = process.env.REDDIT_CLIENT_SECRET!;
-const REDDIT_USER_AGENT = process.env.REDDIT_USER_AGENT!;
-
 async function ensureFlairTemplatesExist(
   reddit: Snoowrap,
   subreddit: Snoowrap.Subreddit
@@ -27,6 +23,10 @@ async function ensureFlairTemplatesExist(
 }
 
 export async function GET(request: NextRequest) {
+  const REDDIT_CLIENT_ID = process.env.REDDIT_CLIENT_ID!;
+  const REDDIT_CLIENT_SECRET = process.env.REDDIT_CLIENT_SECRET!;
+  const REDDIT_USER_AGENT = process.env.REDDIT_USER_AGENT!;
+
   const authData = await getAuthData(request);
 
   if (!authData.residentialStatus) {

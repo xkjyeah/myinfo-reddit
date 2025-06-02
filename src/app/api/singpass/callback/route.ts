@@ -4,7 +4,7 @@ import * as oidClient from 'openid-client';
 
 import { getAuthData, setAuthData } from '../../auth/session';
 import { constructForwardedForUrl, updateUrlWith } from '../../util';
-import { getConfiguration } from '../keys';
+import { getConfiguration } from '../oidConfiguration';
 
 export async function GET(request: NextRequest) {
   try {

@@ -2,8 +2,6 @@ const { createDefaultPreset } = require('ts-jest');
 
 const tsJestTransformCfg = createDefaultPreset().transform;
 
-console.log(tsJestTransformCfg);
-
 /** @type {import("jest").Config} **/
 module.exports = {
   testEnvironment: 'node',
@@ -15,4 +13,5 @@ module.exports = {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   transformIgnorePatterns: [],
+  testPathIgnorePatterns: ['/node_modules/', '/fixtures/', '/__tests__/fixtures/'],
 };

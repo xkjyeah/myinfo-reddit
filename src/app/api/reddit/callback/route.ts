@@ -6,12 +6,12 @@ import { saveRedditToken } from '@/lib/db';
 import { getAuthData, setAuthData } from '../../auth/session';
 import { constructForwardedForUrl } from '../../util';
 
-const REDDIT_CLIENT_ID = process.env.REDDIT_CLIENT_ID!;
-const REDDIT_CLIENT_SECRET = process.env.REDDIT_CLIENT_SECRET!;
-const REDDIT_REDIRECT_URI = process.env.REDDIT_REDIRECT_URI!;
-const REDDIT_USER_AGENT = process.env.REDDIT_USER_AGENT!;
-
 export async function GET(request: NextRequest) {
+  const REDDIT_CLIENT_ID = process.env.REDDIT_CLIENT_ID!;
+  const REDDIT_CLIENT_SECRET = process.env.REDDIT_CLIENT_SECRET!;
+  const REDDIT_REDIRECT_URI = process.env.REDDIT_REDIRECT_URI!;
+  const REDDIT_USER_AGENT = process.env.REDDIT_USER_AGENT!;
+
   const searchParams = request.nextUrl.searchParams;
   const code = searchParams.get('code');
   const state = searchParams.get('state');

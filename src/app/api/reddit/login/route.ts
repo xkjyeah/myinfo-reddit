@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Snoowrap from 'snoowrap';
 
-const REDDIT_CLIENT_ID = process.env.REDDIT_CLIENT_ID!;
-const REDDIT_REDIRECT_URI = process.env.REDDIT_REDIRECT_URI!;
-
 export async function GET(request: NextRequest) {
+  const REDDIT_CLIENT_ID = process.env.REDDIT_CLIENT_ID!;
+  const REDDIT_REDIRECT_URI = process.env.REDDIT_REDIRECT_URI!;
+
   const { searchParams } = new URL(request.url);
   const subreddit = searchParams.get('subreddit');
 

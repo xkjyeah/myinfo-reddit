@@ -157,15 +157,18 @@ beforeAll(() => {
 
   process.env = {
     ...originalEnv,
+    // MyInfo Configuration
     MYINFO_APP_REDIRECT_URL: 'https://example.com/api/singpass/callback',
     MYINFO_HOST: 'https://stg-id.singpass.gov.sg',
     MYINFO_APP_ID: 'test-app-id',
     MYINFO_PRIVATE_ENC_KEY: (encKey.privateKey as string).replace(/\n/g, '|'),
     MYINFO_PRIVATE_SIG_KEY: (sigKey.privateKey as string).replace(/\n/g, '|'),
+    // Reddit Configuration
     REDDIT_CLIENT_ID: 'test-reddit-client-id',
     REDDIT_CLIENT_SECRET: 'test-reddit-client-secret',
     REDDIT_REDIRECT_URI: 'https://example.com/api/reddit/callback',
     REDDIT_USER_AGENT: 'test-user-agent',
+    // JWT Configuration
     JWT_SECRET: 'test-jwt-secret-key-for-testing-purposes-only',
   };
 });
